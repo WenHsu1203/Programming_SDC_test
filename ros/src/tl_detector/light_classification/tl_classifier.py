@@ -58,7 +58,7 @@ class TLClassifier(object):
     def __init__(self):
         # load classifier
         self.model = create_model()
-        self.model.load_weights('saved_model/weights.best.self.defined.hdf5')
+        self.model.load_weights('saved_models/weights.best.self.defined.hdf5')
 
     def img_to_tensor(self, img):
         img = cv2.resize(img,(224,224))
