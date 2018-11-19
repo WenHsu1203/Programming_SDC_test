@@ -3,6 +3,55 @@ from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D
 from keras.layers import Dropout, Flatten, Dense
 from keras.models import Sequential
 from resizeimage import resizeimage
+
+def create_model():
+        model = Sequential()
+        # 224,224,16
+        model.add(Conv2D(filters = 16, kernel_size = 2, padding = 'same', activation = 'relu', input_shape = (224, 224, 3)))
+        # 112,112,16
+        model.add(MaxPooling2D(pool_size = 2))
+        # Dropout
+        model.add(Dropout(0.5))
+        # 112,112,32
+        model.add(Conv2D(filters = 32, kernel_size = 2, padding = 'same', activation = 'relu'))
+        # 56,56,32
+        model.add(MaxPooling2D(pool_size = 2))
+        # Dropout
+        model.add(Dropout(0.5))
+        # 56,56,64
+        model.add(Conv2D(filters = 64, kernel_size = 2, padding = 'same', activation = 'relu'))
+        # 28,28,64
+        model.add(MaxPooling2D(pool_size = 2))
+        # Dropout
+        model.add(Dropout(0.5))
+        # 28,28,128
+        model.add(Conv2D(filters = 128, kernel_size = 2, padding = 'same', activation = 'relu'))
+        # 14,14,128
+        model.add(MaxPooling2D(pool_size = 2))
+        # Dropout
+        model.add(Dropout(0.5))
+        # 14,14,256
+        model.add(Conv2D(filters = 256, kernel_size = 2, padding = 'same', activation = 'relu'))
+        # 7,7,256
+        model.add(MaxPooling2D(pool_size = 2))
+        # Dropout
+        model.add(Dropout(0.5))
+        # flatten
+        model.add(Flatten())
+        model.add(Dense(5000, activation = 'relu'))
+        # Dropout
+        model.add(Dropout(0.5))
+        model.add(Dense(1000, activation = 'relu'))
+        # Dropout
+        model.add(Dropout(0.5))
+        model.add(Dense(500, activation = 'relu'))
+        # Dropout
+        model.add(Dropout(0.5))
+        # Fully connected Layer to the number of signal categories
+        model.add(Dense(4, activation = 'softmax'))
+        return model
+
+
 class TLClassifier(object):
     def __init__(self):
         #TODO load classifier
