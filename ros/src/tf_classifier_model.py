@@ -48,6 +48,8 @@ from keras.models import Sequential, Model
 from keras.callbacks import ModelCheckpoint  
 from keras import applications
 from keras import optimizers
+from keras.models import load_model
+
 model = applications.VGG19(weights = "imagenet", include_top=False, input_shape = (224, 224, 3))
 model.summary()
 
@@ -74,7 +76,7 @@ model_final.compile(loss = "categorical_crossentropy", optimizer = 'rmsprop', me
 epochs = 10
 batch_size = 64
 
-checkpointer = ModelCheckpoint(filepath='saved_models/weights.best.VGG19.hdf5', 
+checkpointer = ModelCheckpoint(filepath='saved_models/weights.best.VGG19.h5', 
                                verbose=1, save_best_only=True)
 
 model_final.fit(train_tensors, y_train, 
@@ -82,7 +84,8 @@ model_final.fit(train_tensors, y_train,
           epochs=epochs, batch_size=batch_size, callbacks=[checkpointer], verbose=1)
 
 # load the trained model
-model.load_weights('saved_models/weights.best.VGG19.hdf5')
+del model
+model = load_model('saved_models/weights.test.self_defined.h5')
 
 # get index of predicted signal sign for each image in test set
 signal_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]

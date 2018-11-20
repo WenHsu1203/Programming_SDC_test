@@ -48,6 +48,7 @@ from keras.models import Sequential, Model
 from keras.callbacks import ModelCheckpoint  
 from keras import applications
 from keras import optimizers
+from keras.models import load_model
 
 model = Sequential()
 ### TODO: Define your architecture.
@@ -101,10 +102,10 @@ model.summary()
 model.compile(loss = "categorical_crossentropy", optimizer = 'rmsprop', metrics=["accuracy"])
 
 # train the model.
-epochs = 3
+epochs = 10
 batch_size = 64
 
-checkpointer = ModelCheckpoint(filepath='saved_models/weights.best.self_defined.hdf5', 
+checkpointer = ModelCheckpoint(filepath='saved_models/weights.test.self_defined.h5', 
                                verbose=1, save_best_only=True)
 
 model.fit(train_tensors, y_train, 
@@ -112,9 +113,16 @@ model.fit(train_tensors, y_train,
           epochs=epochs, batch_size=batch_size, callbacks=[checkpointer], verbose=1)
 
 # load the trained model
-model.load_weights('saved_models/weights.best.self_defined.hdf5')
+# model.load_weights('saved_models/weights.best.self_defined.hdf5')
 
-# get index of predicted signal sign for each image in test set
+# # get index of predicted signal sign for each image in test set
+# signal_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]
+# # print out test accuracy
+# test_accuracy = 100*np.sum(np.array(signal_predictions)==np.argmax(y_test, axis=1))/len(signal_predictions)
+# print('Test accuracy: %.4f%%' % test_accuracy)
+
+del model
+model = load_model('saved_models/weights.test.self_defined.h5')
 signal_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]
 # print out test accuracy
 test_accuracy = 100*np.sum(np.array(signal_predictions)==np.argmax(y_test, axis=1))/len(signal_predictions)
