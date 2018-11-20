@@ -10,7 +10,7 @@ from keras.models import load_model
 class TLClassifier(object):
     def __init__(self):
         # load classifier
-        self.model.load_weights('saved_models/weights.test.self_defined.hdf5')
+        self.model = load_weights('saved_models/weights.test.self_defined.h5')
 
     def img_to_tensor(self, img):
         img = cv2.resize(img,(224,224))
