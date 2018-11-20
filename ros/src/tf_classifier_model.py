@@ -74,7 +74,7 @@ model_final.compile(loss = "categorical_crossentropy", optimizer = 'rmsprop', me
 
 # train the model.
 epochs = 10
-batch_size = 64
+batch_size = 128
 
 checkpointer = ModelCheckpoint(filepath='saved_models/weights.best.VGG19.h5', 
                                verbose=1, save_best_only=True)
