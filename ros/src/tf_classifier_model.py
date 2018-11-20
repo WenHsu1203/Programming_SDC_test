@@ -85,7 +85,7 @@ model_final.fit(train_tensors, y_train,
 
 # load the trained model
 del model
-model = load_model('saved_models/weights.test.self_defined.h5')
+model = load_model('saved_models/weights.best.VGG19.h5')
 
 # get index of predicted signal sign for each image in test set
 signal_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]
