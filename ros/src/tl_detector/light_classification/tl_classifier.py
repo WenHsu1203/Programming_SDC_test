@@ -7,6 +7,7 @@ from keras.preprocessing import image
 import numpy as np
 from keras.models import load_model
 
+# build the structure of the model
 def create_model():
     model = Sequential()
     # 224,224,16
@@ -56,11 +57,12 @@ def create_model():
 
 class TLClassifier(object):
     def __init__(self):
-        # load classifier
+        # load the model
         self.model = create_model()
         self.model.load_weights('saved_models/weights.best.self.defined.hdf5')
 
     def img_to_tensor(self, img):
+        # resize the image to (224, 224) to input into the model
         img = cv2.resize(img,(224,224))
         # convert 3D tensor to 4D tensor with shape (1, 224, 224, 3) and return 4D tensor
         return np.expand_dims(img, axis=0)
@@ -76,6 +78,15 @@ class TLClassifier(object):
 
         """
         #TODO implement light color prediction
+        
+        # signal should be a vector of size four [green, red, unknown, yellow]. One of the value is 1 others are 0
+        # ex. [0 1 0 0], which indicates it's a red light
         signal = self.model.predict(img_to_tensor(image))
-        print(signal)
+        if (signal[0] == 1):
+            return TrafficLight.GREEN
+        elif (signal[1] == 1):
+            return TrafficLight.RED
+        elif (signal[3] == 1):
+            return TrafficLight.YELLOW
+
         return TrafficLight.UNKNOWN
