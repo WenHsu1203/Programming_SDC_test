@@ -7,7 +7,7 @@ from glob import glob
 def load_dataset(path):
     data = load_files(path)
     X = np.array(data['filenames'])
-    y = np_utils.to_categorical(np.array(data['target']), 4)
+    y = np_utils.to_categorical(np.array(data['target']), num_classes = 3)
     return X, y
 
 # load the train, test dataset
@@ -51,7 +51,6 @@ from keras import optimizers
 from keras.models import load_model
 
 model = Sequential()
-### TODO: Define your architecture.
 # 224,224,16
 model.add(Conv2D(filters = 16, kernel_size = 2, padding = 'same', activation = 'relu', input_shape = (224, 224, 3)))
 # 112,112,16
@@ -94,7 +93,7 @@ model.add(Dense(500, activation = 'relu'))
 # Dropout
 model.add(Dropout(0.5))
 # Fully connected Layer to the number of signal categories
-model.add(Dense(4, activation = 'softmax'))
+model.add(Dense(3, activation = 'softmax'))
 
 model.summary()
 
@@ -105,25 +104,28 @@ model.compile(loss = "categorical_crossentropy", optimizer = 'rmsprop', metrics=
 epochs = 10
 batch_size = 64
 
-checkpointer = ModelCheckpoint(filepath='saved_models/weights.test.self_defined.h5', 
+checkpointer = ModelCheckpoint(filepath='saved_models/model_weights.h5', 
                                verbose=1, save_best_only=True)
-
+# save the model architecture
+with open('model_architecture.json', 'w') as f:
+    f.write(model.to_json())
+# fit the model
 model.fit(train_tensors, y_train, 
           validation_data=(valid_tensors, y_val),
           epochs=epochs, batch_size=batch_size, callbacks=[checkpointer], verbose=1)
 
+
 # load the trained model
-# model.load_weights('saved_models/weights.best.self_defined.hdf5')
+from keras.models import model_from_json
+with open('model_architecture.json', 'r') as f:
+    model = model_from_json(f.read())
 
-# # get index of predicted signal sign for each image in test set
-# signal_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]
-# # print out test accuracy
-# test_accuracy = 100*np.sum(np.array(signal_predictions)==np.argmax(y_test, axis=1))/len(signal_predictions)
-# print('Test accuracy: %.4f%%' % test_accuracy)
+model.load_weights('model_weights.h5')
 
-del model
-model = load_model('saved_models/weights.test.self_defined.h5')
+
+# get index of predicted signal sign for each image in test set
 signal_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]
 # print out test accuracy
 test_accuracy = 100*np.sum(np.array(signal_predictions)==np.argmax(y_test, axis=1))/len(signal_predictions)
 print('Test accuracy: %.4f%%' % test_accuracy)
+
