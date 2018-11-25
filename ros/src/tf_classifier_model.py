@@ -7,7 +7,7 @@ from glob import glob
 def load_dataset(path):
     data = load_files(path)
     X = np.array(data['filenames'])
-    y = np_utils.to_categorical(np.array(data['target']), 4)
+    y = np_utils.to_categorical(np.array(data['target']))
     return X, y
 
 # load the train, test dataset
@@ -74,18 +74,23 @@ model_final.compile(loss = "categorical_crossentropy", optimizer = 'rmsprop', me
 
 # train the model.
 epochs = 10
-batch_size = 128
+batch_size = 64
 
-checkpointer = ModelCheckpoint(filepath='saved_models/weights.best.VGG19.h5', 
+checkpointer = ModelCheckpoint(filepath='saved_models/weights_VGG19.h5', 
                                verbose=1, save_best_only=True)
+
+with open('model_architecture_VGG19.json', 'w') as f:
+    f.write(model.to_json())
 
 model_final.fit(train_tensors, y_train, 
           validation_data=(valid_tensors, y_val),
           epochs=epochs, batch_size=batch_size, callbacks=[checkpointer], verbose=1)
 
 # load the trained model
-del model
-model = load_model('saved_models/weights.best.VGG19.h5')
+from keras.models import model_from_json
+with open('model_architecture_VGG19.json', 'r') as f:
+    model = model_from_json(f.read())
+model = load_model('saved_models/weights_VGG19.h5')
 
 # get index of predicted signal sign for each image in test set
 signal_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]
