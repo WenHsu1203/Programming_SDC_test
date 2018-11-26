@@ -12,6 +12,7 @@ from scipy.spatial import KDTree
 import tf
 import cv2
 import yaml
+import os
 
 # Only process every Xth image
 IMAGE_CB_THRESHOLD = 4
@@ -28,6 +29,7 @@ class TLDetector(object):
         self.pose = None
         self.waypoints = None
         self.camera_image = None
+        self.waypoints_tree = None
         self.lights = []
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
@@ -63,8 +65,6 @@ class TLDetector(object):
             os.makedirs(IMAGE_FOLDER)
         # NEW
         self.waypoints_2d = None
-        self.waypoint_tree = None
-
         self.var = True
         self.count_numImg = 0
         self.fileNum = 0
@@ -78,9 +78,12 @@ class TLDetector(object):
         self.pose = msg
 
     def waypoints_cb(self, waypoints):
-        if not self.waypoints_2d:
-            self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
-            self.waypoint_tree = KDTree(self.waypoints_2d)
+        self.waypoints = waypoints
+        
+        # TODO: waypoints_2d necessary?
+        if not self.waypoints_tree:
+            waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            self.waypoints_tree = KDTree(waypoints_2d)
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
