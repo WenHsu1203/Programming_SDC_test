@@ -12,6 +12,7 @@ from keras.models import Model
 from keras import applications
 # load the trained model
 from keras.utils.generic_utils import CustomObjectScope
+import rospy
 
 model_filepath = 'saved_models/model.MobileNet-3-classes.h5'
 n_classes = 3
