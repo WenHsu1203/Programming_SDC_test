@@ -3,7 +3,7 @@ from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D
 from keras.layers import Dropout, Flatten, Dense
 from keras.models import Sequential
 import cv2
-from keras.preprocessing import image
+from keras.preprocessing import image as img_preprocessing
 import numpy as np
 from keras.models import model_from_json
 from styx_msgs.msg import TrafficLight
@@ -63,7 +63,7 @@ class TLClassifier(object):
         image = cv2.resize(image,(224,224))
         
         # to tensors and normalize it
-        x = image.img_to_array(image)
+        x = img_preprocessing.img_to_array(image)
         x = np.expand_dims(x, axis=0).astype('float32')/255
         
         # get index of predicted signal sign for the image
