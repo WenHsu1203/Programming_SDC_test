@@ -63,7 +63,7 @@ class TLClassifier(object):
         image = cv2.resize(image,(224,224))
         
         # to tensors and normalize it
-        x = img_preprocessing.img_to_array(image)
+        x = image.img_to_array(image)
         x = np.expand_dims(x, axis=0).astype('float32')/255
         
         # get index of predicted signal sign for the image
