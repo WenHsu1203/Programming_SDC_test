@@ -5,61 +5,30 @@ from keras.models import Sequential
 import cv2
 from keras.preprocessing import image
 import numpy as np
+from keras.models import model_from_json
+from styx_msgs.msg import TrafficLight
 from keras.models import load_model
+from keras.models import Model
+from keras import applications
+# load the trained model
+from keras.utils.generic_utils import CustomObjectScope
 
-# build the structure of the model
-def create_model():
-    model = Sequential()
-    # 224,224,16
-    model.add(Conv2D(filters = 16, kernel_size = 2, padding = 'same', activation = 'relu', input_shape = (224, 224, 3)))
-    # 112,112,16
-    model.add(MaxPooling2D(pool_size = 2))
-    # Dropout
-    model.add(Dropout(0.5))
-    # 112,112,32
-    model.add(Conv2D(filters = 32, kernel_size = 2, padding = 'same', activation = 'relu'))
-    # 56,56,32
-    model.add(MaxPooling2D(pool_size = 2))
-    # Dropout
-    model.add(Dropout(0.5))
-    # 56,56,64
-    model.add(Conv2D(filters = 64, kernel_size = 2, padding = 'same', activation = 'relu'))
-    # 28,28,64
-    model.add(MaxPooling2D(pool_size = 2))
-    # Dropout
-    model.add(Dropout(0.5))
-    # 28,28,128
-    model.add(Conv2D(filters = 128, kernel_size = 2, padding = 'same', activation = 'relu'))
-    # 14,14,128
-    model.add(MaxPooling2D(pool_size = 2))
-    # Dropout
-    model.add(Dropout(0.5))
-    # 14,14,256
-    model.add(Conv2D(filters = 256, kernel_size = 2, padding = 'same', activation = 'relu'))
-    # 7,7,256
-    model.add(MaxPooling2D(pool_size = 2))
-    # Dropout
-    model.add(Dropout(0.5))
-    # flatten
-    model.add(Flatten())
-    model.add(Dense(5000, activation = 'relu'))
-    # Dropout
-    model.add(Dropout(0.5))
-    model.add(Dense(1000, activation = 'relu'))
-    # Dropout
-    model.add(Dropout(0.5))
-    model.add(Dense(500, activation = 'relu'))
-    # Dropout
-    model.add(Dropout(0.5))
-    # Fully connected Layer to the number of signal categories
-    model.add(Dense(4, activation = 'softmax'))
-    return model
+model_filepath = 'saved_models/model.MobileNet-3-classes.h5'
+n_classes = 3
 
 class TLClassifier(object):
     def __init__(self):
+        # load keras libraies and load the MobileNet model
+        with CustomObjectScope({'relu6': applications.mobilenet.relu6,'DepthwiseConv2D': applications.mobilenet.DepthwiseConv2D}):
+            self.model = load_model(model_filepath)
+            self.model._make_predict_function() # Otherwise there is a "Tensor %s is not an element of this grap..." when predicting
+        rospy.loginfo("TLClassifier: Model loaded - READY")
         # load the model
-        self.model = create_model()
-        self.model.load_weights('saved_models/weights.best.self_defined.h5')
+        # with open('model_architecture.json', 'r') as f:
+        #     self.model = model_from_json(f.read())
+        # self.model.load_weights('saved_models/weights.best.self_defined.h5')
+
+        # rospy.loginfo("TLClassifier: Model loaded - READY")
 
     def img_to_tensor(self, img):
         # resize the image to (224, 224) to input into the model
@@ -81,12 +50,22 @@ class TLClassifier(object):
         
         # signal should be a vector of size four [green, red, unknown, yellow]. One of the value is 1 others are 0
         # ex. [0 1 0 0], which indicates it's a red light
-        signal = self.model.predict(img_to_tensor(image))
-        if (signal[0] == 1):
-            return TrafficLight.GREEN
-        elif (signal[1] == 1):
-            return TrafficLight.RED
-        elif (signal[3] == 1):
-            return TrafficLight.YELLOW
+        # signal = self.model.predict(img_to_tensor(image).astype('float32')/255)
+        # if (signal[0] == 1):
+        #     return TrafficLight.GREEN
+        # elif (signal[1] == 1):
+        #     return TrafficLight.RED
+        # elif (signal[3] == 1):
+        #     return TrafficLight.YELLOW
 
-        return TrafficLight.UNKNOWN
+        # return TrafficLight.UNKNOWN
+        image = cv2.resize(image,(224,224))
+        
+        # to tensors and normalize it
+        x = img_preprocessing.img_to_array(image)
+        x = np.expand_dims(x, axis=0).astype('float32')/255
+        
+        # get index of predicted signal sign for the image
+        signal_prediction = np.argmax(self.model.predict(x))
+
+        return signal_prediction

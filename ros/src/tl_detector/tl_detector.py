@@ -7,16 +7,24 @@ from styx_msgs.msg import Lane
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from light_classification.tl_classifier import TLClassifier
+from light_classification.img_collector import IMGCollector
+from scipy.spatial import KDTree
 import tf
 import cv2
 import yaml
 
+# Only process every Xth image
+IMAGE_CB_THRESHOLD = 4
+
+ENABLE_COLLECT_DATA = False
 STATE_COUNT_THRESHOLD = 3
+MAX_NUM_IMG = 1000
+IMAGE_FOLDER = "images"
 
 class TLDetector(object):
     def __init__(self):
         rospy.init_node('tl_detector')
-
+        rospy.logwarn('tl_detector')
         self.pose = None
         self.waypoints = None
         self.camera_image = None
@@ -49,13 +57,30 @@ class TLDetector(object):
         self.last_wp = -1
         self.state_count = 0
 
+        self.image_cb_counter = 0
+        # for image classification collection
+        if not os.path.exists(IMAGE_FOLDER):
+            os.makedirs(IMAGE_FOLDER)
+        # NEW
+        self.waypoints_2d = None
+        self.waypoint_tree = None
+
+        self.var = True
+        self.count_numImg = 0
+        self.fileNum = 0
+        self.has_finished_collect_data = not (ENABLE_COLLECT_DATA)
+        self.last_pose = None
+        rospy.logwarn('TLDetector __init__')
+        # NEW END
         rospy.spin()
 
     def pose_cb(self, msg):
         self.pose = msg
 
     def waypoints_cb(self, waypoints):
-        self.waypoints = waypoints
+        if not self.waypoints_2d:
+            self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            self.waypoint_tree = KDTree(self.waypoints_2d)
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
@@ -68,6 +93,10 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
+        self.image_cb_counter += 1
+        if(0 != (self.image_cb_counter % IMAGE_CB_THRESHOLD)):
+            return
+
         self.has_image = True
         self.camera_image = msg
         light_wp, state = self.process_traffic_lights()
@@ -101,7 +130,18 @@ class TLDetector(object):
 
         """
         #TODO implement
-        closest_idx = self.waypoint_tree.query([x, y], 1)[1]
+        closest_idx = self.waypoint_tree.query([x,y],1)[1]
+        closest_coord = self.waypoints_2d[closest_idx]
+        prev_coord = self.waypoints_2d[closest_idx -1]
+
+        cl_vect = np.array(closest_coord)
+        prev_vect = np.array(prev_coord)
+        pos_vect = np.array([x,y])
+
+        val = np.dot(cl_vect-prev_vect,pos_vect-cl_vect)
+
+        if val > 0:
+            closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
         return closest_idx
 
     def get_light_state(self, light):
@@ -122,7 +162,14 @@ class TLDetector(object):
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
         #Get classification
-        return self.light_classifier.get_classification(cv_image)
+        light_state = self.light_classifier.get_classification(cv_image)
+
+        if light_state != light.state:
+            rospy.logwarn("Light state = %d, predicted = %d", light.state, light_state)
+        else:
+            rospy.loginfo("Light state %d correctly predicted", light.state)
+        
+        return light_state
         
         
     def process_traffic_lights(self):
