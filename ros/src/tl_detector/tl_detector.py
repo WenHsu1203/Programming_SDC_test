@@ -133,18 +133,20 @@ class TLDetector(object):
 
         """
         #TODO implement
-        closest_idx = self.waypoint_tree.query([x,y],1)[1]
-        closest_coord = self.waypoints_2d[closest_idx]
-        prev_coord = self.waypoints_2d[closest_idx -1]
+        # closest_idx = self.waypoint_tree.query([x,y],1)[1]
+        # closest_coord = self.waypoints_2d[closest_idx]
+        # prev_coord = self.waypoints_2d[closest_idx -1]
 
-        cl_vect = np.array(closest_coord)
-        prev_vect = np.array(prev_coord)
-        pos_vect = np.array([x,y])
+        # cl_vect = np.array(closest_coord)
+        # prev_vect = np.array(prev_coord)
+        # pos_vect = np.array([x,y])
 
-        val = np.dot(cl_vect-prev_vect,pos_vect-cl_vect)
+        # val = np.dot(cl_vect-prev_vect,pos_vect-cl_vect)
 
-        if val > 0:
-            closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
+        # if val > 0:
+        #     closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
+        # return closest_idx
+        closest_idx = self.waypoints_tree.query([x, y], 1)[1]
         return closest_idx
 
     def get_light_state(self, light):
