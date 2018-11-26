@@ -6,6 +6,8 @@ from std_msgs.msg import Int32
 from styx_msgs.msg import Lane, Waypoint
 from scipy.spatial import KDTree
 
+import inspect
+
 import math
 
 '''
@@ -122,8 +124,8 @@ class WaypointUpdater(object):
         self.pose = msg
 
     def waypoints_cb(self, waypoints):
-        rospy.loginfo("Callback: %s", inspect.stack()[0][3])
-        rospy.loginfo("Number of waypoints: %d", len(waypoints.waypoints))
+        # rospy.loginfo("Callback: %s", inspect.stack()[0][3])
+        # rospy.loginfo("Number of waypoints: %d", len(waypoints.waypoints))
     	# TODO: Implement
         self.base_lane = waypoints
         if not self.waypoints_2d:
