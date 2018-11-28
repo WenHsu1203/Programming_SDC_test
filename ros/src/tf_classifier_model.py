@@ -2,7 +2,7 @@ from sklearn.datasets import load_files
 from keras.utils import np_utils
 import numpy as np
 import os
-
+import keras
 # DATA_PATH = '/Users/WenHsu/Documents/Self-Driving car/Term3 Path Planning, Concentrations and System/Project 4/training_data/TLdataset02'
 DATA_PATH = 'TLdataset02'
 MODEL_FOLDER = 'MobileNet_model'
@@ -84,7 +84,9 @@ checkpointer = ModelCheckpoint(filepath='MobileNet_model/weights_MobileNet.h5',
 # load the trained model
 from keras.models import load_model
 from keras.utils.generic_utils import CustomObjectScope
-with CustomObjectScope({'relu6': mobilenet.relu6,'DepthwiseConv2D': mobilenet.DepthwiseConv2D}):
+with CustomObjectScope({'relu6': keras.layers.ReLU(6.),'DepthwiseConv2D': keras.layers.DepthwiseConv2D}):
+# from keras.applications.mobilenet import DepthwiseConv2D, relu6
+# with CustomObjectScope({'relu6': mobilenet.relu6,'DepthwiseConv2D': mobilenet.DepthwiseConv2D}):
     model = load_model('MobileNet_model/weights_MobileNet.h5')
 
 # get index of predicted signal sign for each image in test set
