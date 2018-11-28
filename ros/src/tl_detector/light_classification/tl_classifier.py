@@ -15,14 +15,14 @@ import keras
 from keras.utils.generic_utils import CustomObjectScope
 import rospy
 
-# model_filepath = 'saved_models/model.MobileNet-3-classes.h5'
-model_filepath = 'saved_models/weights_MobileNet_v2.h5'
+model_filepath = 'saved_models/model.MobileNet-3-classes.h5'
+# model_filepath = 'saved_models/weights_MobileNet_v2.h5'
 n_classes = 3
 
 class TLClassifier(object):
     def __init__(self):
         # load keras libraies and load the MobileNet model
-        with CustomObjectScope({'relu6': keras.layers.ReLU(6.),'DepthwiseConv2D': keras.layers.DepthwiseConv2D}):
+        with CustomObjectScope({'relu6': applications.mobilenet.relu6,'DepthwiseConv2D': applications.mobilenet.DepthwiseConv2D}):
             self.model = load_model(model_filepath)
             self.model._make_predict_function() # Otherwise there is a "Tensor %s is not an element of this grap..." when predicting
         rospy.loginfo("TLClassifier: Model loaded - READY")
