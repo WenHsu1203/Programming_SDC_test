@@ -46,12 +46,12 @@ valid_tensors = paths_to_tensor(X_val).astype('float32')/255
 test_tensors = paths_to_tensor(X_test).astype('float32')/255
 
 # load keras libraies and load the MobileNet model
-from keras.layers import Dense
+from keras.layers import Dense, Flatten
 from keras.models import Model
 from keras.callbacks import ModelCheckpoint  
-from keras.applications import mobilenet
+from keras.applications import mobilenet_v2
 
-model = mobilenet.MobileNet(weights='imagenet')#input_shape = (224, 224, 3))
+model = mobilenet_v2.MobileNetV2(weights='imagenet') #input_shape = (224, 224, 3))
 
 # freeze the layers expcet the last 15 layers
 layers_freezing = 15
@@ -59,10 +59,11 @@ for layer in model.layers[:-layers_freezing]:
     layer.trainable = False
 
 # add the custom layers
-last_layer = model.layers[-6].output
+last_2_layer = model.layers[-6].output
+last_layer = Flatten()(last_2_layer)
 predictions = Dense(N_classes, activation='softmax')(last_layer)
 model_final = Model(inputs=model.input, outputs=predictions)
-# model_final.summary()
+model_final.summary()
 
 # creating the final modal
 model_final = Model(input = model.input, output = predictions)
@@ -74,7 +75,7 @@ model_final.compile(loss = "categorical_crossentropy", optimizer = 'rmsprop', me
 epochs = 10
 batch_size = 128
 
-checkpointer = ModelCheckpoint(filepath='MobileNet_model/weights_MobileNet.h5', 
+checkpointer = ModelCheckpoint(filepath='MobileNet_model/weights_MobileNet_v2.h5', 
                                verbose=1, save_best_only=True)
 
 # model_final.fit(train_tensors, y_train, 
@@ -87,7 +88,7 @@ from keras.utils.generic_utils import CustomObjectScope
 with CustomObjectScope({'relu6': keras.layers.ReLU(6.),'DepthwiseConv2D': keras.layers.DepthwiseConv2D}):
 # from keras.applications.mobilenet import DepthwiseConv2D, relu6
 # with CustomObjectScope({'relu6': mobilenet.relu6,'DepthwiseConv2D': mobilenet.DepthwiseConv2D}):
-    model = load_model('MobileNet_model/weights_MobileNet.h5')
+    model = load_model('MobileNet_model/weights_MobileNet_v2.h5')
 
 # get index of predicted signal sign for each image in test set
 signal_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]
