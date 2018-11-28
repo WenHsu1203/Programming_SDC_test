@@ -3,7 +3,8 @@ from keras.utils import np_utils
 import numpy as np
 import os
 
-DATA_PATH = '/Users/WenHsu/Documents/Self-Driving car/Term3 Path Planning, Concentrations and System/Project 4/training_data/TLdataset02'
+# DATA_PATH = '/Users/WenHsu/Documents/Self-Driving car/Term3 Path Planning, Concentrations and System/Project 4/training_data/TLdataset02'
+DATA_PATH = 'TLdataset02'
 MODEL_FOLDER = 'MobileNet_model'
 
 if not os.path.exists(MODEL_FOLDER):
@@ -76,9 +77,9 @@ batch_size = 128
 checkpointer = ModelCheckpoint(filepath='MobileNet_model/weights_MobileNet.h5', 
                                verbose=1, save_best_only=True)
 
-model_final.fit(train_tensors, y_train, 
-          validation_data=(valid_tensors, y_val),
-          epochs=epochs, batch_size=batch_size, callbacks=[checkpointer], verbose=1)
+# model_final.fit(train_tensors, y_train, 
+#          validation_data=(valid_tensors, y_val),
+#          epochs=epochs, batch_size=batch_size, callbacks=[checkpointer], verbose=1)
 
 # load the trained model
 from keras.models import load_model
