@@ -96,10 +96,6 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
-        self.image_cb_counter += 1
-        if(0 != (self.image_cb_counter % IMAGE_CB_THRESHOLD)):
-            return
-
         self.has_image = True
         self.camera_image = msg
         light_wp, state = self.process_traffic_lights()
