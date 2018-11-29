@@ -49,21 +49,19 @@ test_tensors = paths_to_tensor(X_test).astype('float32')/255
 from keras.layers import Dense, Flatten
 from keras.models import Model
 from keras.callbacks import ModelCheckpoint  
-from keras.applications import mobilenet_v2
+from keras import applications
 
-model = mobilenet_v2.MobileNetV2(weights='imagenet') #input_shape = (224, 224, 3))
+model = applications.mobilenet.MobileNet(input_shape = (224,224,3)) #input_shape = (224, 224, 3))
 
 # freeze the layers expcet the last 15 layers
-layers_freezing = 15
-for layer in model.layers[:-layers_freezing]:
-    layer.trainable = False
+# layers_freezing = 15
+# for layer in model.layers[:-layers_freezing]:
+#     layer.trainable = False
 
 # add the custom layers
-last_2_layer = model.layers[-6].output
-last_layer = Flatten()(last_2_layer)
+last_layer = model.output
 predictions = Dense(N_classes, activation='softmax')(last_layer)
 model_final = Model(inputs=model.input, outputs=predictions)
-model_final.summary()
 
 # creating the final modal
 model_final = Model(input = model.input, output = predictions)
@@ -72,23 +70,22 @@ model_final = Model(input = model.input, output = predictions)
 model_final.compile(loss = "categorical_crossentropy", optimizer = 'rmsprop', metrics=["accuracy"])
 
 # train the model.
-epochs = 10
+epochs = 20
 batch_size = 128
-
-checkpointer = ModelCheckpoint(filepath='MobileNet_model/weights_MobileNet_v2.h5', 
+model_filepath = 'MobileNet_model/weights_MobileNet_Real.h5'
+checkpointer = ModelCheckpoint(filepath= model_filepath, 
                                verbose=1, save_best_only=True)
 
-# model_final.fit(train_tensors, y_train, 
-#          validation_data=(valid_tensors, y_val),
-#          epochs=epochs, batch_size=batch_size, callbacks=[checkpointer], verbose=1)
+model_final.fit(train_tensors, y_train, 
+         validation_data=(valid_tensors, y_val),
+         epochs=epochs, batch_size=batch_size, callbacks=[checkpointer], verbose=1)
 
 # load the trained model
 from keras.models import load_model
 from keras.utils.generic_utils import CustomObjectScope
-with CustomObjectScope({'relu6': keras.layers.ReLU(6.),'DepthwiseConv2D': keras.layers.DepthwiseConv2D}):
-# from keras.applications.mobilenet import DepthwiseConv2D, relu6
-# with CustomObjectScope({'relu6': mobilenet.relu6,'DepthwiseConv2D': mobilenet.DepthwiseConv2D}):
-    model = load_model('MobileNet_model/weights_MobileNet_v2.h5')
+del model
+with CustomObjectScope({'relu6': applications.mobilenet.relu6,'DepthwiseConv2D': applications.mobilenet.DepthwiseConv2D}):
+    model = load_model(model_filepath)
 
 # get index of predicted signal sign for each image in test set
 signal_predictions = [np.argmax(model.predict(np.expand_dims(tensor, axis=0))) for tensor in test_tensors]
